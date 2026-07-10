@@ -192,7 +192,18 @@
                 <button class="grid-btn" onclick="openColorSubModal('bg')" style="font-size:12px;">選擇背景色</button>
                 <button class="grid-btn" onclick="openColorSubModal('text')" style="font-size:12px;">選擇文字色</button>
             </div>
-            
+            <hr style="opacity:0.2;">
+<p style="font-size:14px; font-weight:bold; margin:6px 0;">自選背景圖片</p>
+<div style="display:flex; gap:10px; margin-bottom: 10px;">
+    <button class="grid-btn" onclick="document.getElementById('bgImageInput').click()" style="font-size:12px; flex:1; background:#E3F2FD; color:#0D47A1;">🖼️ 上傳背景圖片</button>
+    <button class="grid-btn" onclick="clearBgImage()" id="btnClearBgImg" style="font-size:12px; display:none; background:#FFEBEE; color:#C62828;">❌ 移除圖片</button>
+    <input type="file" id="bgImageInput" accept="image/*" onchange="handleBgImageUpload(this)" style="display:none;">
+</div>
+
+<div id="opacitySliderGroup" style="display:none; justify-content:space-between; align-items:center; margin:10px 0;">
+    <span style="font-size:14px; font-weight:bold;">文字底層遮罩不透明度 (<span id="lblOpacity">45%</span>)</span>
+    <input type="range" id="sliderOpacity" min="0.0" max="0.9" step="0.05" value="0.45" oninput="changeBgOpacity(this.value)" style="width:120px;">
+</div>
             <!-- 💡 新增：自選背景圖片區塊 -->
             <hr style="opacity:0.2;">
             <p style="font-size:14px; font-weight:bold; margin:6px 0;">自選背景圖片</p>

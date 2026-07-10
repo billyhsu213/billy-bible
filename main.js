@@ -67,6 +67,9 @@ let allVerses = [];
 let allVersesCache = [];
 let selectedVersesMap = new Map(); // index -> fullText
 
+let customBgImage = localStorage.getItem("customBgImage") || null;
+let bgOpacity = parseFloat(localStorage.getItem("bgOpacity")) || 0.45; // 💡 新增這一行
+
 // 預加載與快取映射
 const bookMap = {};
 books.forEach((b, idx) => { bookMap[b.shortName] = { index: idx, value: b }; });
@@ -290,24 +293,28 @@ function applyThemeSettings() {
     const bg = customBgColor || currentTheme.contentBg;
     const txt = customTextColor || currentTheme.contentText;
 
-    // 💡 如果有自選背景圖片，優先套用圖片
     if (customBgImage) {
         body.style.backgroundImage = `url(${customBgImage})`;
         body.style.backgroundSize = "cover";
         body.style.backgroundPosition = "center";
         body.style.backgroundRepeat = "no-repeat";
-        body.style.backgroundAttachment = "fixed"; // 滾動時背景固定
+        body.style.backgroundAttachment = "fixed";
 
-        // 有圖片時，上下工具列給予微微的半透明遮罩
-        topBar.style.background = "rgba(0, 0, 0, 0.4)";
+        // 💡 關鍵：使用你自選的不透明度 (bgOpacity) 嚟做黑底遮罩，防止相片太花睇唔到字
+        topBar.style.background = `rgba(0, 0, 0, ${bgOpacity})`;
         topBar.style.color = "#FFFFFF";
-        bottomBar.style.background = "rgba(0, 0, 0, 0.4)";
+        bottomBar.style.background = `rgba(0, 0, 0, ${bgOpacity})`;
         bottomBar.style.color = "#FFFFFF";
 
+        // 網頁主體經文背景也套用該遮罩不透明度
+        body.style.backgroundColor = `rgba(0, 0, 0, ${bgOpacity})`;
+        body.style.backgroundBlendMode = "darken"; // 混合模式：讓圖片變暗
+
         document.getElementById('btnClearBgImg').style.display = "inline-block";
+        document.getElementById('opacitySliderGroup').style.display = "flex"; // 顯示滑塊
     } else {
-        // 冇圖片，行返原本的一體化純色邏輯
         body.style.backgroundImage = "none";
+        body.style.backgroundBlendMode = "normal";
         topBar.style.background = bg;
         bottomBar.style.background = bg;
         body.style.background = bg;
@@ -315,11 +322,11 @@ function applyThemeSettings() {
         bottomBar.style.color = txt;
 
         document.getElementById('btnClearBgImg').style.display = "none";
+        document.getElementById('opacitySliderGroup').style.display = "none"; // 隱藏滑塊
     }
 
-    body.style.color = txt;
+    body.style.color = customBgImage ? "#FFFFFF" : txt;
 
-    // 按鈕外框跟隨文字顏色
     const buttons = document.querySelectorAll('.bottom-bar .btn');
     buttons.forEach(btn => {
         if (customBgImage) {
@@ -331,7 +338,6 @@ function applyThemeSettings() {
         }
     });
 }
-
 function changeFontSize(val) {
     fontSizeMultiplier = parseFloat(val);
     document.getElementById('lblFontSize').innerText = `${Math.round(val * 100)}%`;
@@ -462,6 +468,8 @@ function renderBookSelectors() {
 }
 
 function setupUIListeners() {
+document.getElementById('sliderOpacity').value = bgOpacity;
+document.getElementById('lblOpacity').innerText = `${Math.round(bgOpacity * 100)}%`;
     document.getElementById('chkBold').checked = isGlobalBold;
     document.getElementById('sliderFont').value = fontSizeMultiplier;
     document.getElementById('lblFontSize').innerText = `${Math.round(fontSizeMultiplier * 100)}%`;
@@ -510,4 +518,11 @@ function clearBgImage() {
     document.getElementById('bgImageInput').value = ""; // 清空 input 殘留
     applyThemeSettings();
     renderCurrentChapter();
+}
+// 動態更變遮罩不透明度
+function changeBgOpacity(val) {
+    bgOpacity = parseFloat(val);
+    document.getElementById('lblOpacity').innerText = `${Math.round(val * 100)}%`;
+    localStorage.setItem("bgOpacity", val);
+    applyThemeSettings();
 }
