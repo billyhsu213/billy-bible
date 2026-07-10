@@ -102,6 +102,7 @@ async function init() {
 }
 
 // 建立檢索快取 (對應原版 buildSearchCache)
+// 💡 安全相容版 buildSearchCache
 function buildSearchCache() {
     allVersesCache = [];
     allVerses.forEach(line => {
@@ -109,7 +110,17 @@ function buildSearchCache() {
         if (colonIdx === -1) return;
 
         const prefix = line.substring(0, colonIdx);
-        const shortName = prefix.match(/^[^\d]+/)[0];
+        
+        // 🛠️ 改用最傳統、最安全的手動迴圈提取簡稱，100% 避開瀏覽器核心報錯
+        let shortName = "";
+        for (let i = 0; i < prefix.length; i++) {
+            const char = prefix.charAt(i);
+            if (char >= '0' && char <= '9') {
+                break;
+            }
+            shortName += char;
+        }
+
         const chapterStr = prefix.substring(shortName.length);
         const chapter = parseInt(chapterStr, 10) || 1;
 
@@ -130,7 +141,6 @@ function buildSearchCache() {
         });
     });
 }
-
 // 獲取當前章節經文 (對應原版 getVerses)
 function getVerses(bookShortName, chapter) {
     const targetPrefix = `${bookShortName}${chapter}:`;
