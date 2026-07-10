@@ -61,6 +61,7 @@ let currentThemeName = localStorage.getItem("selectedTheme") || "紫色的袍";
 
 let customBgColor = localStorage.getItem("customBgColor") || null;
 let customTextColor = localStorage.getItem("customTextColor") || null;
+let customBgImage = localStorage.getItem("customBgImage") || null;	
 
 let allVerses = [];
 let allVersesCache = [];
@@ -285,26 +286,49 @@ function applyThemeSettings() {
     const topBar = document.getElementById('topBar');
     const bottomBar = document.getElementById('bottomBar');
     const body = document.body;
-    
-    // 1. 確定當前的背景色和經文文字色
+
     const bg = customBgColor || currentTheme.contentBg;
     const txt = customTextColor || currentTheme.contentText;
 
-    // 2. 全部統一：標題列、下方導航列、網頁背景全面改用相同的背景色
-    topBar.style.background = bg;
-    bottomBar.style.background = bg;
-    body.style.background = bg;
+    // 💡 如果有自選背景圖片，優先套用圖片
+    if (customBgImage) {
+        body.style.backgroundImage = `url(${customBgImage})`;
+        body.style.backgroundSize = "cover";
+        body.style.backgroundPosition = "center";
+        body.style.backgroundRepeat = "no-repeat";
+        body.style.backgroundAttachment = "fixed"; // 滾動時背景固定
 
-    // 3. 所有文字、按鈕的顏色全面改用相同的經文文字色
-    topBar.style.color = txt;
-    bottomBar.style.color = txt;
+        // 有圖片時，上下工具列給予微微的半透明遮罩
+        topBar.style.background = "rgba(0, 0, 0, 0.4)";
+        topBar.style.color = "#FFFFFF";
+        bottomBar.style.background = "rgba(0, 0, 0, 0.4)";
+        bottomBar.style.color = "#FFFFFF";
+
+        document.getElementById('btnClearBgImg').style.display = "inline-block";
+    } else {
+        // 冇圖片，行返原本的一體化純色邏輯
+        body.style.backgroundImage = "none";
+        topBar.style.background = bg;
+        bottomBar.style.background = bg;
+        body.style.background = bg;
+        topBar.style.color = txt;
+        bottomBar.style.color = txt;
+
+        document.getElementById('btnClearBgImg').style.display = "none";
+    }
+
     body.style.color = txt;
 
-    // 4. 連同底部的「上一章」、「下一章」外框按鈕顏色都統一
+    // 按鈕外框跟隨文字顏色
     const buttons = document.querySelectorAll('.bottom-bar .btn');
     buttons.forEach(btn => {
-        btn.style.color = txt;
-        btn.style.borderColor = txt; // 邊框也跟隨文字顏色
+        if (customBgImage) {
+            btn.style.color = "#FFFFFF";
+            btn.style.borderColor = "#FFFFFF";
+        } else {
+            btn.style.color = txt;
+            btn.style.borderColor = txt;
+        }
     });
 }
 
@@ -459,3 +483,31 @@ function setupUIListeners() {
 }
 
 window.onload = init;
+// 處理圖片上傳並轉成 Base64 永久儲存
+function handleBgImageUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64Img = e.target.result;
+        try {
+            customBgImage = base64Img;
+            localStorage.setItem("customBgImage", base64Img);
+            applyThemeSettings();
+            renderCurrentChapter(); // 重新整理經文行樣式
+        } catch (error) {
+            alert("相片檔案太大了，請換一張較小的相片（建議 2MB 以下）作背景。");
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+// 移除背景圖片
+function clearBgImage() {
+    customBgImage = null;
+    localStorage.removeItem("customBgImage");
+    document.getElementById('bgImageInput').value = ""; // 清空 input 殘留
+    applyThemeSettings();
+    renderCurrentChapter();
+}
