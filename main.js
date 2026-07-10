@@ -293,17 +293,20 @@ function applyThemeSettings() {
     const txt = customTextColor || currentTheme.contentText;
 
     if (customBgImage) {
+        // 1. 載入背景圖片
         body.style.backgroundImage = `url(${customBgImage})`;
         body.style.backgroundSize = "cover";
         body.style.backgroundPosition = "center";
         body.style.backgroundRepeat = "no-repeat";
         body.style.backgroundAttachment = "fixed";
 
-        topBar.style.background = `rgba(0, 0, 0, ${bgOpacity})`;
-        topBar.style.color = "#FFFFFF";
-        bottomBar.style.background = `rgba(0, 0, 0, ${bgOpacity})`;
+        // 💡 2. 關鍵修正：將上下工具列的背景直接變成 100% 全透明 (transparent)
+        topBar.style.background = "transparent";
+        topBar.style.color = "#FFFFFF"; // 圖片模式下文字統一用白色，顯眼啲
+        bottomBar.style.background = "transparent";
         bottomBar.style.color = "#FFFFFF";
 
+        // 3. 整個網頁主體套用你調整的黑色遮罩（這樣整張圖會一體化地變暗/變亮，而不會切斷上下工具列）
         body.style.backgroundColor = `rgba(0, 0, 0, ${bgOpacity})`;
         body.style.backgroundBlendMode = "darken";
 
@@ -312,6 +315,7 @@ function applyThemeSettings() {
         if(btnClear) btnClear.style.display = "inline-block";
         if(sliderGroup) sliderGroup.style.display = "flex";
     } else {
+        // 冇自選圖片，行返原本的一體化純色邏輯
         body.style.backgroundImage = "none";
         body.style.backgroundBlendMode = "normal";
         topBar.style.background = bg;
@@ -328,14 +332,17 @@ function applyThemeSettings() {
 
     body.style.color = customBgImage ? "#FFFFFF" : txt;
 
+    // 按鈕外框處理
     const buttons = document.querySelectorAll('.bottom-bar .btn');
     buttons.forEach(btn => {
         if (customBgImage) {
             btn.style.color = "#FFFFFF";
             btn.style.borderColor = "#FFFFFF";
+            btn.style.background = "rgba(255,255,255,0.1)"; // 幫按鈕加微微的透明白底，更好看
         } else {
             btn.style.color = txt;
             btn.style.borderColor = txt;
+            btn.style.background = "transparent";
         }
     });
 }
