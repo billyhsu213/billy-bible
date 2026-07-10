@@ -21,58 +21,53 @@
 
     <style>
         :root {
-    /* 確保在所有平台上都能正確抓到安全區域，若抓不到則留空 */
-    --safe-top: env(safe-area-inset-top, 0px);
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
-}
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden; user-select: none;
+        }
+        #app { display: flex; flex-direction: column; height: 100%; width: 100%; position: relative; }
+        
+        /* Top AppBar */
+        .top-bar {
+            padding-top: calc(var(--safe-top) + 10px); padding-bottom: 10px;
+            padding-left: 16px; padding-right: 16px;
+            display: flex; align-items: center; justify-content: space-between;
+            font-weight: bold; font-size: 19px; z-index: 10;
+        }
+        .selector-group { display: flex; gap: 10px; align-items: center; }
+        .dropdown-trigger { cursor: pointer; display: flex; align-items: center; }
+        .dropdown-trigger span { font-size: 13px; opacity: 0.6; margin-left: 2px; }
+        .icon-buttons { display: flex; gap: 18px; font-size: 22px; cursor: pointer; }
 
-body, html {
-    margin: 0; padding: 0; 
-    width: 100%; height: 100%;
-    /* 關鍵：確保 body 填滿整個物理螢幕（包括狀態列下方） */
-    height: 100vh; 
-    height: -webkit-fill-available;
-    overflow: hidden; 
-    user-select: none;
-}
-
-#app { 
-    display: flex; 
-    flex-direction: column; 
-    height: 100%; 
-    width: 100%; 
-    position: relative;
-    /* 移除任何可能阻擋背景的底色 */
-    background: transparent; 
-}
-
-/* Top AppBar */
-.top-bar {
-    /* 使用 safe-area 確保文字不會被 iPhone 瀏海或 Android 挖孔鏡頭遮住 */
-    padding-top: calc(var(--safe-top) + 10px); 
-    padding-bottom: 10px;
-    padding-left: 16px; 
-    padding-right: 16px;
-    display: flex; 
-    align-items: center; 
-    justify-content: space-between;
-    font-weight: bold; 
-    font-size: 19px; 
-    z-index: 10;
-}
-
-/* Bottom Bar */
-.bottom-bar {
-    /* 使用 safe-area 確保按鈕不會與 iOS Home Indicator 橫條或 Android 三鍵導覽列重疊 */
-    padding-bottom: calc(var(--safe-bottom) + 16px); 
-    padding-top: 16px;
-    padding-left: 16px; 
-    padding-right: 16px;
-    display: flex; 
-    align-items: center; 
-    justify-content: space-between;
-    z-index: 10;
-}        .btn {
+        /* Content Area */
+        .content-view {
+            flex: 1; overflow-y: auto; padding: 16px 12px;
+            display: flex; flex-direction: column; gap: 6px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .verse-row {
+            display: flex; align-items: flex-start; padding: 6px 4px;
+            border-radius: 4px; cursor: pointer; transition: background 0.2s;
+        }
+        .verse-num {
+            width: 36px; font-weight: bold; flex-shrink: 0;
+            text-align: left; padding-right: 4px;
+        }
+        .verse-text { flex: 1; text-align: left; word-break: break-all; }
+        
+        /* Bottom Bar */
+        .bottom-bar {
+            padding-bottom: calc(var(--safe-bottom) + 16px); padding-top: 16px;
+            padding-left: 16px; padding-right: 16px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-top: 1px solid rgba(0,0,0,0.05); z-index: 10;
+        }
+        .btn {
             padding: 8px 16px; border-radius: 20px; border: 1px solid currentColor;
             background: transparent; font-weight: bold; cursor: pointer; font-size: 14px;
         }
