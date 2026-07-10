@@ -21,7 +21,7 @@ const books = [
     { name: "哈該書", shortName: "該", maxChapters: 2 }, { name: "撒迦利亞書", shortName: "亞", maxChapters: 14 },
     { name: "瑪拉基書", shortName: "瑪", maxChapters: 4 }, { name: "馬太福音", shortName: "太", maxChapters: 28 },
     { name: "馬可福音", shortName: "可", maxChapters: 16 }, { name: "路加福音", shortName: "路", maxChapters: 24 },
-    { name: "約hn福音", shortName: "約", maxChapters: 21 }, { name: "使徒行傳", shortName: "徒", maxChapters: 28 },
+    { name: "約翰福音", shortName: "約", maxChapters: 21 }, { name: "使徒行傳", shortName: "徒", maxChapters: 28 },
     { name: "羅馬書", shortName: "羅", maxChapters: 16 }, { name: "哥林多前書", shortName: "林前", maxChapters: 16 },
     { name: "哥林多後書", shortName: "林後", maxChapters: 13 }, { name: "加拉太書", shortName: "加", maxChapters: 6 },
     { name: "以弗所書", shortName: "弗", maxChapters: 6 }, { name: "腓立比書", shortName: "腓", maxChapters: 4 },
@@ -39,7 +39,7 @@ const themes = [
     { name: "淵面黑暗", topBarBg: "#1F1F1F", topBarText: "#E3E3E3", contentBg: "#121212", contentText: "#E5E5E5" },
     { name: "青草地上", topBarBg: "#388E3C", topBarText: "#FFFFFF", contentBg: "#F1F8E9", contentText: "#1B5E20" },
     { name: "歸於塵土", topBarBg: "#8B5A2B", topBarText: "#FFFFFF", contentBg: "#F4ECD8", contentText: "#5D4037" },
-    { name: "紫色的袍", topBarBg: "#4A148C", topBarText: "#FFFFEBEE", contentBg: "#1F033D", contentText: "#F3E5F5" }
+    { name: "紫色的袍", topBarBg: "#4A148C", topBarText: "#EBEEFF", contentBg: "#1F033D", contentText: "#F3E5F5" }
 ];
 
 const colors56 = [
@@ -52,7 +52,7 @@ const colors56 = [
     "#EFEBE9","#D7CCC8","#BCAAA4","#A1887F","#6D4C41","#4E342E","#1F110B","#140B07"
 ];
 
-// App 狀態變數
+// App 狀態
 let currentBookIdx = parseInt(localStorage.getItem("lastBookIdx")) || 0;
 let currentChapter = parseInt(localStorage.getItem("lastChapter")) || 1;
 let fontSizeMultiplier = parseFloat(localStorage.getItem("fontSizeMultiplier")) || 1.0;
@@ -67,12 +67,12 @@ let bgOpacity = parseFloat(localStorage.getItem("bgOpacity")) || 0.45;
 let allVerses = [];
 let allVersesCache = [];
 let selectedVersesMap = new Map();
-let cropperInstance = null; // ✂️ Cropper 控制器暫存
+let cropperInstance = null; 
 
 const bookMap = {};
 books.forEach((b, idx) => { bookMap[b.shortName] = { index: idx, value: b }; });
 
-// 初始化資料庫
+// 初始化
 async function init() {
     setupUIListeners();
     renderBookSelectors();
@@ -175,13 +175,13 @@ function renderCurrentChapter() {
         row.style.lineHeight = `1.45`;
         if (isGlobalBold) row.style.fontWeight = "bold";
 
-        row.onclick = () => handleVerseClick(index, fullVerseText, row, verseNumber);
+        row.onclick = () => handleVerseClick(index, fullText = fullVerseText, row, verseNumber);
 
         if (verseNumber) {
             const numSpan = document.createElement('span');
             numSpan.className = "verse-num";
             numSpan.innerText = verseNumber;
-            numSpan.style.color = customTextColor || themes.find(t=>t.name===currentThemeName).contentText;
+            numSpan.style.color = customBgImage ? "#FFFFFF" : (customTextColor || themes.find(t=>t.name===currentThemeName).contentText);
             numSpan.style.opacity = "0.5";
             numSpan.id = `vnum-${index}`;
             row.appendChild(numSpan);
@@ -263,7 +263,7 @@ function handleShare() {
     if (navigator.share) { navigator.share({ text: text }).then(() => clearSelection()); } else { handleCopy(); }
 }
 
-// 🎨 標題列與底部完全透明優化
+// 🎨 核心：控制自選背景與工具列透明度
 function applyThemeSettings() {
     const currentTheme = themes.find(t => t.name === currentThemeName) || themes[0];
     const topBar = document.getElementById('topBar');
@@ -274,18 +274,21 @@ function applyThemeSettings() {
     const txt = customTextColor || currentTheme.contentText;
 
     if (customBgImage) {
+        // ✨ 自選背景圖片啟動
         body.style.backgroundImage = `url(${customBgImage})`;
         body.style.backgroundSize = "cover";
         body.style.backgroundPosition = "center";
         body.style.backgroundRepeat = "no-repeat";
         body.style.backgroundAttachment = "fixed";
 
-        // 👑 實現完全穿透透明
+        // 📱 完美全透明工具列穿透效果
         topBar.style.background = "transparent";
         topBar.style.color = "#FFFFFF";
         bottomBar.style.background = "transparent";
         bottomBar.style.color = "#FFFFFF";
+        bottomBar.style.borderTop = "none";
 
+        // 調節背景遮罩透明度
         body.style.backgroundColor = `rgba(0, 0, 0, ${bgOpacity})`;
         body.style.backgroundBlendMode = "darken";
 
@@ -294,6 +297,7 @@ function applyThemeSettings() {
         if(btnClear) btnClear.style.display = "inline-block";
         if(sliderGroup) sliderGroup.style.display = "flex";
     } else {
+        // 🎨 普通主題或色板背景
         body.style.backgroundImage = "none";
         body.style.backgroundBlendMode = "normal";
         topBar.style.background = bg;
@@ -301,6 +305,7 @@ function applyThemeSettings() {
         body.style.background = bg;
         topBar.style.color = txt;
         bottomBar.style.color = txt;
+        bottomBar.style.borderTop = "1px solid rgba(0,0,0,0.05)";
 
         const btnClear = document.getElementById('btnClearBgImg');
         const sliderGroup = document.getElementById('opacitySliderGroup');
@@ -315,7 +320,7 @@ function applyThemeSettings() {
         if (customBgImage) {
             btn.style.color = "#FFFFFF";
             btn.style.borderColor = "#FFFFFF";
-            btn.style.background = "rgba(255,255,255,0.1)";
+            btn.style.background = "rgba(255,255,255,0.15)";
         } else {
             btn.style.color = txt;
             btn.style.borderColor = txt;
@@ -370,6 +375,7 @@ function openColorSubModal(mode) {
         dot.onclick = () => {
             if (mode === 'bg') { customBgColor = color; localStorage.setItem("customBgColor", color); } 
             else { customTextColor = color; localStorage.setItem("customTextColor", color); }
+            customBgImage = null; localStorage.removeItem("customBgImage"); // 清除圖片背景以套用色彩
             applyThemeSettings(); renderCurrentChapter();
             document.getElementById('colorPaletteModal').style.display = 'none';
         };
@@ -383,7 +389,7 @@ function executeSearch() {
     const resultsView = document.getElementById('searchResultsView');
     if (!query) return;
 
-    resultsView.innerHTML = "<div style='text-align:center;'>檢索中...</div>";
+    resultsView.innerHTML = "<div style='text-align:center;'>檢責中...</div>";
     
     setTimeout(() => {
         const filtered = allVersesCache.filter(item => item.verseContent.toLowerCase().includes(query));
@@ -437,8 +443,8 @@ function setupUIListeners() {
         card.innerHTML = `<span>${t.name}</span><div style="display:flex;gap:4px;"><div style="width:16px;height:16px;background:${t.topBarBg}"></div><div style="width:16px;height:16px;background:${t.contentBg}"></div></div>`;
         card.onclick = () => {
             currentThemeName = t.name; localStorage.setItem("selectedTheme", t.name);
-            customBgColor = null; customTextColor = null;
-            localStorage.removeItem("customBgColor"); localStorage.removeItem("customTextColor");
+            customBgColor = null; customTextColor = null; customBgImage = null;
+            localStorage.removeItem("customBgColor"); localStorage.removeItem("customTextColor"); localStorage.removeItem("customBgImage");
             applyThemeSettings(); renderCurrentChapter();
             document.getElementById('appearanceModal').style.display = 'none';
         };
@@ -446,21 +452,19 @@ function setupUIListeners() {
     });
 }
 
-// ✂️ 解鎖超大相片限制 ＋ 喚醒手動縮放裁剪框
+// 🖼️ 處理圖片上傳與裁剪框啟動
 function handleBgImageUpload(input) {
     const file = input.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = function(e) {
-        // 先將原始大相片放到裁剪框的 img 標籤中
         const cropImage = document.getElementById('cropImage');
         cropImage.src = e.target.result;
 
         // 打開手動選取範圍的彈窗
         document.getElementById('cropModal').style.display = 'flex';
 
-        // 重新初始化 Cropper
         if (cropperInstance) cropperInstance.destroy();
         
         cropperInstance = new Cropper(cropImage, {
@@ -471,44 +475,44 @@ function handleBgImageUpload(input) {
             modal: true,
             guides: true,
             highlight: false,
-            cropBoxMovable: true,  // 恢復框框手動移動
-            cropBoxResizable: true // 恢復框框手動縮放大小
+            cropBoxMovable: true,  // 啟用手動拖拽移動
+            cropBoxResizable: true // 啟用手動拉大縮小
         });
     };
     reader.readAsDataURL(file);
 }
 
-// ✂️ 取消選取
 function cancelCrop() {
     if (cropperInstance) cropperInstance.destroy();
     document.getElementById('cropModal').style.display = 'none';
     document.getElementById('bgImageInput').value = "";
 }
 
-// ✂️ 使用者縮放選取完畢，按確定儲存
+// 確定儲存裁剪後的高清背景
 function saveCroppedImage() {
     if (!cropperInstance) return;
 
-    // 💡 高清極限解鎖：不論原圖多大，裁剪後自動轉換並壓縮至最高 2000 像素寬度的精細畫質
+    // 💡 突破大圖體積限制：自動調整並轉碼高精細度畫質
     const canvas = cropperInstance.getCroppedCanvas({
         maxWidth: 2000,
         maxHeight: 2000
     });
 
-    // 智能壓縮，大幅降低體積但保留高清視網膜級別視覺
     const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
 
     try {
         customBgImage = compressedBase64;
         localStorage.setItem("customBgImage", compressedBase64);
+        customBgColor = null; // 清除純色背景
+        localStorage.removeItem("customBgColor");
+        
         applyThemeSettings();
         renderCurrentChapter();
         
-        // 關閉所有相關彈窗
         document.getElementById('cropModal').style.display = 'none';
         document.getElementById('appearanceModal').style.display = 'none';
     } catch (error) {
-        alert("儲存空間不足，建議清理一下瀏覽器快取再重試。");
+        alert("手機瀏覽器儲存容量不足，建議清除一次快取重試。");
     }
 
     if (cropperInstance) cropperInstance.destroy();
@@ -531,7 +535,6 @@ function changeBgOpacity(val) {
     applyThemeSettings();
 }
 
-// 完全載入安全鎖
 window.addEventListener('DOMContentLoaded', () => {
     const slider = document.getElementById('sliderOpacity');
     const label = document.getElementById('lblOpacity');
