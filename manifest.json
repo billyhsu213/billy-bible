@@ -2,7 +2,7 @@
   "name": "MyBibleApp",
   "short_name": "MyBibleApp",
   "start_url": "index.html",
-  "display": "fullscreen",
+  "display": "standalone",
   "background_color": "#1F033D",
   "theme_color": "#00000000",
   "icons": [

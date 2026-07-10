@@ -265,7 +265,6 @@ function handleShare() {
     if (navigator.share) { navigator.share({ text: text }).then(() => clearSelection()); } else { handleCopy(); }
 }
 
-// 🎨 核心：控制自選背景與工具列透明度
 function applyThemeSettings() {
     const currentTheme = themes.find(t => t.name === currentThemeName) || themes[0];
     const topBar = document.getElementById('topBar');
@@ -275,6 +274,10 @@ function applyThemeSettings() {
     const bg = customBgColor || currentTheme.contentBg;
     const txt = customTextColor || currentTheme.contentText;
 
+    // 💡 永遠保持工具列背景透明，讓 body 的背景（圖片或顏色）自然穿透到狀態列與導覽列
+    topBar.style.background = "transparent";
+    bottomBar.style.background = "transparent";
+
     if (customBgImage) {
         // ✨ 自選背景圖片啟動
         body.style.backgroundImage = `url(${customBgImage})`;
@@ -283,16 +286,16 @@ function applyThemeSettings() {
         body.style.backgroundRepeat = "no-repeat";
         body.style.backgroundAttachment = "fixed";
 
-        // 📱 完美全透明工具列穿透效果
-        topBar.style.background = "transparent";
         topBar.style.color = "#FFFFFF";
-        bottomBar.style.background = "transparent";
         bottomBar.style.color = "#FFFFFF";
         bottomBar.style.borderTop = "none";
 
         // 調節背景遮罩透明度
         body.style.backgroundColor = `rgba(0, 0, 0, ${bgOpacity})`;
         body.style.backgroundBlendMode = "darken";
+
+        // 動態修改 Android 系統狀態列顏色（部分 Chrome 版本支援）
+        updateMetaThemeColor("#000000");
 
         const btnClear = document.getElementById('btnClearBgImg');
         const sliderGroup = document.getElementById('opacitySliderGroup');
@@ -302,12 +305,16 @@ function applyThemeSettings() {
         // 🎨 普通主題或色板背景
         body.style.backgroundImage = "none";
         body.style.backgroundBlendMode = "normal";
-        topBar.style.background = bg;
-        bottomBar.style.background = bg;
-        body.style.background = bg;
+        
+        // 直接將主題色設定在最底層的 body
+        body.style.background = bg; 
+        
         topBar.style.color = txt;
         bottomBar.style.color = txt;
         bottomBar.style.borderTop = "1px solid rgba(0,0,0,0.05)";
+
+        // 動態將 Android 系統狀態列同步為主題色
+        updateMetaThemeColor(bg);
 
         const btnClear = document.getElementById('btnClearBgImg');
         const sliderGroup = document.getElementById('opacitySliderGroup');
@@ -329,6 +336,17 @@ function applyThemeSettings() {
             btn.style.background = "transparent";
         }
     });
+}
+
+// 輔助函式：動態調整 Android Meta Theme Color
+function updateMetaThemeColor(color) {
+    let meta = document.querySelector('meta[name="theme-color"]');
+    if (!meta) {
+        meta = document.createElement('meta');
+        meta.name = "theme-color";
+        document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', color);
 }
 
 function changeFontSize(val) {
