@@ -269,21 +269,33 @@ function navigateChapter(direction) {
 }
 
 // 外觀設定更變
+// 💡 修改後的完美一體化主題套用邏輯
 function applyThemeSettings() {
     const currentTheme = themes.find(t => t.name === currentThemeName) || themes[0];
     const topBar = document.getElementById('topBar');
     const bottomBar = document.getElementById('bottomBar');
     const body = document.body;
-
+    
+    // 1. 確定當前的背景色和經文文字色
     const bg = customBgColor || currentTheme.contentBg;
     const txt = customTextColor || currentTheme.contentText;
 
-    topBar.style.background = customBgColor ? bg : currentTheme.topBarBg;
-    topBar.style.color = customBgColor ? txt : currentTheme.topBarText;
+    // 2. 全部統一：標題列、下方導航列、網頁背景全面改用相同的背景色
+    topBar.style.background = bg;
     bottomBar.style.background = bg;
-    bottomBar.style.color = txt;
     body.style.background = bg;
+
+    // 3. 所有文字、按鈕的顏色全面改用相同的經文文字色
+    topBar.style.color = txt;
+    bottomBar.style.color = txt;
     body.style.color = txt;
+
+    // 4. 連同底部的「上一章」、「下一章」外框按鈕顏色都統一
+    const buttons = document.querySelectorAll('.bottom-bar .btn');
+    buttons.forEach(btn => {
+        btn.style.color = txt;
+        btn.style.borderColor = txt; // 邊框也跟隨文字顏色
+    });
 }
 
 function changeFontSize(val) {
