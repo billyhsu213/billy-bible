@@ -496,26 +496,58 @@ function setupUIListeners() {
     });
 }
 
-// 圖片上傳與不透明度控制
+// 🖼️ 升級版：智能解鎖大圖限制（自動壓縮相片至適合手機尺寸）
 function handleBgImageUpload(input) {
     const file = input.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = function(e) {
-        const base64Img = e.target.result;
-        try {
-            customBgImage = base64Img;
-            localStorage.setItem("customBgImage", base64Img);
-            applyThemeSettings();
-            renderCurrentChapter();
-        } catch (error) {
-            alert("相片檔案太大了，請換一張較小的相片（建議 2MB 以下）作背景。");
-        }
+        const img = new Image();
+        img.onload = function() {
+            // 💡 設定手機螢幕觀看所需的最高畫質尺寸（最長邊 1280px 已經非常清晰）
+            const MAX_WIDTH = 1280;
+            const MAX_HEIGHT = 1280;
+            let width = img.width;
+            let height = img.height;
+
+            // 計算縮放比例
+            if (width > height) {
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+            } else {
+                if (height > MAX_HEIGHT) {
+                    width *= MAX_HEIGHT / height;
+                    height = MAX_HEIGHT;
+                }
+            }
+
+            // 用 Canvas 畫布喺背景秘密縮放同壓縮相片
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // 壓縮成 JPEG 格式，畫質設為 0.75 (平衡度最好，肉眼睇唔出分別，但打死個打散個壓縮率)
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.75);
+
+            try {
+                customBgImage = compressedBase64;
+                localStorage.setItem("customBgImage", compressedBase64);
+                applyThemeSettings();
+                renderCurrentChapter(); // 重新整理經文行樣式
+            } catch (error) {
+                // 萬一真的太極端爆咗空間的終極防錯
+                alert("儲存空間已滿，請嘗試換另一張相片。");
+            }
+        };
+        img.src = e.target.result;
     };
     reader.readAsDataURL(file);
 }
-
 function clearBgImage() {
     customBgImage = null;
     localStorage.removeItem("customBgImage");
