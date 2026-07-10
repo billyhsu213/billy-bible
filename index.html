@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>MyBibleApp</title>
     
-    <!-- PWA Standard -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4A148C">
 
-    <!-- 💡 iOS 專屬全螢幕與狀態列優化 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MyBibleApp">
@@ -110,7 +108,6 @@
 <body>
 
 <div id="app">
-    <!-- Top Bar -->
     <div class="top-bar" id="topBar">
         <div class="selector-group">
             <div class="dropdown-trigger" onclick="openModal('bookModal')"><span id="lblBook">創世記</span><span> ▾</span></div>
@@ -122,12 +119,8 @@
         </div>
     </div>
 
-    <!-- Content View -->
-    <div class="content-view" id="contentView">
-        <!-- 經文會動態載入到這裡 -->
-    </div>
+    <div class="content-view" id="contentView"></div>
 
-    <!-- Floating Action Bar -->
     <div class="floating-action-bar" id="floatingBar">
         <span id="lblSelectedCount" style="font-size:14px; font-weight:bold;">已選 0 節</span>
         <button class="fab-btn fab-copy" onclick="handleCopy()">📋 複製</button>
@@ -135,7 +128,6 @@
         <button class="fab-btn fab-cancel" onclick="clearSelection()">取消</button>
     </div>
 
-    <!-- Bottom Navigation -->
     <div class="bottom-bar" id="bottomBar">
         <button class="btn" id="btnPrev" onclick="navigateChapter(-1)">上一章</button>
         <div class="chapter-indicator" id="lblBottomIndicator">創 1</div>
@@ -143,7 +135,6 @@
     </div>
 </div>
 
-<!-- 🎴 書卷選擇彈窗 -->
 <div class="modal" id="bookModal" onclick="closeModal(event, 'bookModal')">
     <div class="modal-content">
         <div class="modal-title">選擇書卷</div>
@@ -160,7 +151,6 @@
     </div>
 </div>
 
-<!-- 🎴 章數選擇彈窗 -->
 <div class="modal" id="chapterModal" onclick="closeModal(event, 'chapterModal')">
     <div class="modal-content">
         <div class="modal-title" id="chapterModalTitle">選擇章數</div>
@@ -170,7 +160,6 @@
     </div>
 </div>
 
-<!-- 🎴 外觀設定彈窗 -->
 <div class="modal" id="appearanceModal" onclick="closeModal(event, 'appearanceModal')">
     <div class="modal-content" style="max-width:360px;">
         <div class="modal-title">外觀設定</div>
@@ -192,32 +181,24 @@
                 <button class="grid-btn" onclick="openColorSubModal('bg')" style="font-size:12px;">選擇背景色</button>
                 <button class="grid-btn" onclick="openColorSubModal('text')" style="font-size:12px;">選擇文字色</button>
             </div>
-            <hr style="opacity:0.2;">
-<p style="font-size:14px; font-weight:bold; margin:6px 0;">自選背景圖片</p>
-<div style="display:flex; gap:10px; margin-bottom: 10px;">
-    <button class="grid-btn" onclick="document.getElementById('bgImageInput').click()" style="font-size:12px; flex:1; background:#E3F2FD; color:#0D47A1;">🖼️ 上傳背景圖片</button>
-    <button class="grid-btn" onclick="clearBgImage()" id="btnClearBgImg" style="font-size:12px; display:none; background:#FFEBEE; color:#C62828;">❌ 移除圖片</button>
-    <input type="file" id="bgImageInput" accept="image/*" onchange="handleBgImageUpload(this)" style="display:none;">
-</div>
-
-<div id="opacitySliderGroup" style="display:none; justify-content:space-between; align-items:center; margin:10px 0;">
-    <span style="font-size:14px; font-weight:bold;">文字底層遮罩不透明度 (<span id="lblOpacity">45%</span>)</span>
-    <input type="range" id="sliderOpacity" min="0.0" max="0.9" step="0.05" value="0.45" oninput="changeBgOpacity(this.value)" style="width:120px;">
-</div>
-            <!-- 💡 新增：自選背景圖片區塊 -->
+            
             <hr style="opacity:0.2;">
             <p style="font-size:14px; font-weight:bold; margin:6px 0;">自選背景圖片</p>
-            <div style="display:flex; gap:10px;">
+            <div style="display:flex; gap:10px; margin-bottom: 10px;">
                 <button class="grid-btn" onclick="document.getElementById('bgImageInput').click()" style="font-size:12px; flex:1; background:#E3F2FD; color:#0D47A1;">🖼️ 上傳背景圖片</button>
                 <button class="grid-btn" onclick="clearBgImage()" id="btnClearBgImg" style="font-size:12px; display:none; background:#FFEBEE; color:#C62828;">❌ 移除圖片</button>
                 <input type="file" id="bgImageInput" accept="image/*" onchange="handleBgImageUpload(this)" style="display:none;">
+            </div>
+
+            <div id="opacitySliderGroup" style="display:none; justify-content:space-between; align-items:center; margin:10px 0;">
+                <span style="font-size:14px; font-weight:bold;">文字底層遮罩不透明度 (<span id="lblOpacity">45%</span>)</span>
+                <input type="range" id="sliderOpacity" min="0.0" max="0.9" step="0.05" value="0.45" oninput="changeBgOpacity(this.value)" style="width:120px;">
             </div>
         </div>
         <div class="modal-footer"><button class="btn" onclick="document.getElementById('appearanceModal').style.display='none'">關閉</button></div>
     </div>
 </div>
 
-<!-- 🎴 56色板子彈窗 -->
 <div class="modal" id="colorPaletteModal" onclick="closeModal(event, 'colorPaletteModal')">
     <div class="modal-content" style="max-width:320px;">
         <div class="modal-title" id="colorModalTitle">請選擇顏色</div>
@@ -228,7 +209,6 @@
     </div>
 </div>
 
-<!-- 🎴 搜尋文字彈窗 -->
 <div class="modal" id="searchModal" onclick="closeModal(event, 'searchModal')">
     <div class="modal-content" style="max-width:90%; height:80%;">
         <div class="modal-title">文字檢索經文</div>

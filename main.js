@@ -30,7 +30,7 @@ const books = [
     { name: "提摩太後書", shortName: "提後", maxChapters: 4 }, { name: "提多書", shortName: "多", maxChapters: 3 },
     { name: "腓利門書", shortName: "門", maxChapters: 1 }, { name: "希伯來書", shortName: "來", maxChapters: 13 },
     { name: "雅各書", shortName: "雅", maxChapters: 5 }, { name: "彼得前書", shortName: "彼前", maxChapters: 5 },
-    { name: "彼得後書", maxChapters: 3, shortName: "彼後", maxChapters: 3 }, { name: "約翰一書", shortName: "約一", maxChapters: 5 },
+    { name: "彼得後書", shortName: "彼後", maxChapters: 3 }, { name: "約翰一書", shortName: "約一", maxChapters: 5 },
     { name: "約翰二書", shortName: "約二", maxChapters: 1 }, { name: "約翰三書", shortName: "約三", maxChapters: 1 },
     { name: "猶大書", shortName: "猶", maxChapters: 1 }, { name: "啟示錄", shortName: "啟", maxChapters: 22 }
 ];
@@ -62,13 +62,11 @@ let currentThemeName = localStorage.getItem("selectedTheme") || "紫色的袍";
 let customBgColor = localStorage.getItem("customBgColor") || null;
 let customTextColor = localStorage.getItem("customTextColor") || null;
 let customBgImage = localStorage.getItem("customBgImage") || null;	
+let bgOpacity = parseFloat(localStorage.getItem("bgOpacity")) || 0.45;
 
 let allVerses = [];
 let allVersesCache = [];
-let selectedVersesMap = new Map(); // index -> fullText
-
-let customBgImage = localStorage.getItem("customBgImage") || null;
-let bgOpacity = parseFloat(localStorage.getItem("bgOpacity")) || 0.45; // 💡 新增這一行
+let selectedVersesMap = new Map();
 
 // 預加載與快取映射
 const bookMap = {};
@@ -90,7 +88,6 @@ async function init() {
             let currentLine = line.trim();
             if (!currentLine) return;
 
-            // 🔥 完美移植原版 Kotlin 強效清理正則
             currentLine = currentLine.replace(/^[";,\s]+/, "").replace(/[";,\s]+$/, "").trim();
 
             if (currentLine.includes(":")) {
@@ -105,8 +102,6 @@ async function init() {
     }
 }
 
-// 建立檢索快取 (對應原版 buildSearchCache)
-// 💡 安全相容版 buildSearchCache
 function buildSearchCache() {
     allVersesCache = [];
     allVerses.forEach(line => {
@@ -115,7 +110,6 @@ function buildSearchCache() {
 
         const prefix = line.substring(0, colonIdx);
         
-        // 🛠️ 改用最傳統、最安全的手動迴圈提取簡稱，100% 避開瀏覽器核心報錯
         let shortName = "";
         for (let i = 0; i < prefix.length; i++) {
             const char = prefix.charAt(i);
@@ -145,7 +139,7 @@ function buildSearchCache() {
         });
     });
 }
-// 獲取當前章節經文 (對應原版 getVerses)
+
 function getVerses(bookShortName, chapter) {
     const targetPrefix = `${bookShortName}${chapter}:`;
     return allVerses.filter(line => line.startsWith(targetPrefix) || line.includes(targetPrefix)).map(line => {
@@ -158,7 +152,6 @@ function getVerses(bookShortName, chapter) {
     });
 }
 
-// 渲染當前章節介面
 function renderCurrentChapter() {
     const book = books[currentBookIdx];
     document.getElementById('lblBook').innerText = book.name;
@@ -183,7 +176,6 @@ function renderCurrentChapter() {
         const row = document.createElement('div');
         row.className = "verse-row";
         
-        // 樣式套用
         const size = 18 * fontSizeMultiplier;
         row.style.fontSize = `${size}px`;
         row.style.lineHeight = `1.45`;
@@ -214,7 +206,6 @@ function renderCurrentChapter() {
     localStorage.setItem("lastChapter", currentChapter);
 }
 
-// 處理經文點擊多選
 function handleVerseClick(index, fullText, rowElement, verseNumber) {
     const numSpan = document.getElementById(`vnum-${index}`);
     if (selectedVersesMap.has(index)) {
@@ -229,6 +220,7 @@ function handleVerseClick(index, fullText, rowElement, verseNumber) {
     updateFloatingBar();
 }
 
+// 其餘 UI 控制邏輯與主題套用
 function updateFloatingBar() {
     const bar = document.getElementById('floatingBar');
     if (selectedVersesMap.size > 0) {
@@ -259,31 +251,38 @@ function handleCopy() {
     });
 }
 
-function handleShare() {
-    const text = generateSelectedText();
-    if (navigator.share) {
-        navigator.share({ text: text }).then(() => clearSelection());
-    } else {
-        // iOS Web 如果不支援原生分享，自動退回到複製
-        handleCopy();
-    }
-}
-
-// 章節跳轉導航
+// 修正原本 navigateChapter 超出界線的問題
 function navigateChapter(direction) {
     currentChapter += direction;
     if (currentChapter < 1) {
         currentBookIdx--;
+        if (currentBookIdx < 0) {
+            currentBookIdx = 0;
+            currentChapter = 1;
+            return;
+        }
         currentChapter = books[currentBookIdx].maxChapters;
     } else if (currentChapter > books[currentBookIdx].maxChapters) {
         currentBookIdx++;
+        if (currentBookIdx >= books.length) {
+            currentBookIdx = books.length - 1;
+            currentChapter = books[currentBookIdx].maxChapters;
+            return;
+        }
         currentChapter = 1;
     }
     renderCurrentChapter();
 }
 
-// 外觀設定更變
-// 💡 修改後的完美一體化主題套用邏輯
+function handleShare() {
+    const text = generateSelectedText();
+    if (navigator.share) {
+        navigator.share({ text: text }).then(() => clearSelection());
+    } else {
+        handleCopy();
+    }
+}
+
 function applyThemeSettings() {
     const currentTheme = themes.find(t => t.name === currentThemeName) || themes[0];
     const topBar = document.getElementById('topBar');
@@ -300,18 +299,18 @@ function applyThemeSettings() {
         body.style.backgroundRepeat = "no-repeat";
         body.style.backgroundAttachment = "fixed";
 
-        // 💡 關鍵：使用你自選的不透明度 (bgOpacity) 嚟做黑底遮罩，防止相片太花睇唔到字
         topBar.style.background = `rgba(0, 0, 0, ${bgOpacity})`;
         topBar.style.color = "#FFFFFF";
         bottomBar.style.background = `rgba(0, 0, 0, ${bgOpacity})`;
         bottomBar.style.color = "#FFFFFF";
 
-        // 網頁主體經文背景也套用該遮罩不透明度
         body.style.backgroundColor = `rgba(0, 0, 0, ${bgOpacity})`;
-        body.style.backgroundBlendMode = "darken"; // 混合模式：讓圖片變暗
+        body.style.backgroundBlendMode = "darken";
 
-        document.getElementById('btnClearBgImg').style.display = "inline-block";
-        document.getElementById('opacitySliderGroup').style.display = "flex"; // 顯示滑塊
+        const btnClear = document.getElementById('btnClearBgImg');
+        const sliderGroup = document.getElementById('opacitySliderGroup');
+        if(btnClear) btnClear.style.display = "inline-block";
+        if(sliderGroup) sliderGroup.style.display = "flex";
     } else {
         body.style.backgroundImage = "none";
         body.style.backgroundBlendMode = "normal";
@@ -321,8 +320,10 @@ function applyThemeSettings() {
         topBar.style.color = txt;
         bottomBar.style.color = txt;
 
-        document.getElementById('btnClearBgImg').style.display = "none";
-        document.getElementById('opacitySliderGroup').style.display = "none"; // 隱藏滑塊
+        const btnClear = document.getElementById('btnClearBgImg');
+        const sliderGroup = document.getElementById('opacitySliderGroup');
+        if(btnClear) btnClear.style.display = "none";
+        if(sliderGroup) sliderGroup.style.display = "none";
     }
 
     body.style.color = customBgImage ? "#FFFFFF" : txt;
@@ -338,16 +339,11 @@ function applyThemeSettings() {
         }
     });
 }
+
 function changeFontSize(val) {
     fontSizeMultiplier = parseFloat(val);
     document.getElementById('lblFontSize').innerText = `${Math.round(val * 100)}%`;
     localStorage.setItem("fontSizeMultiplier", val);
-    renderCurrentChapter();
-}
-
-function toggleBold(val) {
-    isGlobalBold = val;
-    localStorage.setItem("isGlobalBold", val);
     renderCurrentChapter();
 }
 
@@ -369,6 +365,12 @@ function openModal(id) {
         }
     }
     document.getElementById(id).style.display = "flex";
+}
+
+function toggleBold(val) {
+    isGlobalBold = val;
+    localStorage.setItem("isGlobalBold", val);
+    renderCurrentChapter();
 }
 
 function closeModal(e, id) {
@@ -412,7 +414,6 @@ function executeSearch() {
 
     resultsView.innerHTML = "<div style='text-align:center;'>檢索中...</div>";
     
-    // 💡 異步非阻塞過濾，完全等同 Android 的 Dispatchers.Default 執行緒優化
     setTimeout(() => {
         const filtered = allVersesCache.filter(item => item.verseContent.toLowerCase().includes(query));
         if (filtered.length === 0) {
@@ -434,7 +435,6 @@ function executeSearch() {
                 currentChapter = item.chapter;
                 renderCurrentChapter();
                 
-                // 跳轉過去後自動高亮亮起該節 (對應原版 globalJumpTarget 機制)
                 setTimeout(() => {
                     const idx = parseInt(item.verseNumber) - 1;
                     const rows = document.getElementsByClassName('verse-row');
@@ -468,13 +468,12 @@ function renderBookSelectors() {
 }
 
 function setupUIListeners() {
-document.getElementById('sliderOpacity').value = bgOpacity;
-document.getElementById('lblOpacity').innerText = `${Math.round(bgOpacity * 100)}%`;
     document.getElementById('chkBold').checked = isGlobalBold;
     document.getElementById('sliderFont').value = fontSizeMultiplier;
     document.getElementById('lblFontSize').innerText = `${Math.round(fontSizeMultiplier * 100)}%`;
 
     const themeContainer = document.getElementById('themeList');
+    themeContainer.innerHTML = ""; // 清空防重複
     themes.forEach(t => {
         const card = document.createElement('div');
         card.className = "theme-card"; card.style.background = t.contentBg; card.style.color = t.contentText;
@@ -490,8 +489,7 @@ document.getElementById('lblOpacity').innerText = `${Math.round(bgOpacity * 100)
     });
 }
 
-window.onload = init;
-// 處理圖片上傳並轉成 Base64 永久儲存
+// 圖片上傳與不透明度控制
 function handleBgImageUpload(input) {
     const file = input.files[0];
     if (!file) return;
@@ -503,7 +501,7 @@ function handleBgImageUpload(input) {
             customBgImage = base64Img;
             localStorage.setItem("customBgImage", base64Img);
             applyThemeSettings();
-            renderCurrentChapter(); // 重新整理經文行樣式
+            renderCurrentChapter();
         } catch (error) {
             alert("相片檔案太大了，請換一張較小的相片（建議 2MB 以下）作背景。");
         }
@@ -511,18 +509,30 @@ function handleBgImageUpload(input) {
     reader.readAsDataURL(file);
 }
 
-// 移除背景圖片
 function clearBgImage() {
     customBgImage = null;
     localStorage.removeItem("customBgImage");
-    document.getElementById('bgImageInput').value = ""; // 清空 input 殘留
+    const fileInput = document.getElementById('bgImageInput');
+    if (fileInput) fileInput.value = "";
     applyThemeSettings();
     renderCurrentChapter();
 }
-// 動態更變遮罩不透明度
+
 function changeBgOpacity(val) {
     bgOpacity = parseFloat(val);
-    document.getElementById('lblOpacity').innerText = `${Math.round(val * 100)}%`;
+    const label = document.getElementById('lblOpacity');
+    if (label) label.innerText = `${Math.round(val * 100)}%`;
     localStorage.setItem("bgOpacity", val);
     applyThemeSettings();
 }
+
+// 🔒 網頁完全載入後的防錯安全鎖 (確保物件安全初始化，絕對不卡死經文)
+window.addEventListener('DOMContentLoaded', () => {
+    const slider = document.getElementById('sliderOpacity');
+    const label = document.getElementById('lblOpacity');
+    if (slider && label) {
+        slider.value = bgOpacity;
+        label.innerText = `${Math.round(bgOpacity * 100)}%`;
+    }
+    init(); // 呼叫原本的初始化
+});
