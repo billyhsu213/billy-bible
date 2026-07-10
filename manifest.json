@@ -1,0 +1,12 @@
+{
+  "short_name": "MyBibleApp",
+  "name": "MyBibleApp",
+  "icons": [
+    { "src": "icon-180.png", "type": "image/png", "sizes": "180x180" }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#121212",
+  "theme_color": "#4A148C",
+  "display": "standalone",
+  "orientation": "portrait"
+}
