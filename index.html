@@ -5,13 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>MyBibleApp</title>
     
+    <!-- PWA Standard -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4A148C">
 
+    <!-- iOS 專屬優化 -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MyBibleApp">
     <link rel="apple-touch-icon" href="icon-180.png">
+
+    <!-- 📥 引入 Cropper.js 裁剪框專用樣式與腳本 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 
     <style>
         :root {
@@ -95,19 +101,24 @@
         .modal-body { flex: 1; overflow-y: auto; }
         .modal-footer { text-align: right; margin-top: 12px; }
         
-        /* Grid Layout inside Modals */
+        /* Grid Layout */
         .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
         .grid-btn { padding: 8px; border: none; background: #e0e0e0; border-radius: 8px; font-weight: bold; cursor: pointer; }
         
-        /* Appearance List */
+        /* Themes & Colors */
         .theme-card { padding: 10px; border-radius: 8px; margin-bottom: 6px; display: flex; justify-content: space-between; cursor: pointer; border: 1px solid #ccc; font-size: 14px; font-weight: 500; }
         .color-palette-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; }
         .color-dot { aspect-ratio: 1; border-radius: 50%; border: 1px solid rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; cursor: pointer; }
+
+        /* ✂️ 裁剪專用特殊容器 */
+        .crop-container { width: 100%; max-height: 350px; background: #333; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .crop-container img { max-width: 100%; max-height: 100%; display: block; }
     </style>
 </head>
 <body>
 
 <div id="app">
+    <!-- Top Bar -->
     <div class="top-bar" id="topBar">
         <div class="selector-group">
             <div class="dropdown-trigger" onclick="openModal('bookModal')"><span id="lblBook">創世記</span><span> ▾</span></div>
@@ -119,8 +130,10 @@
         </div>
     </div>
 
+    <!-- Content View -->
     <div class="content-view" id="contentView"></div>
 
+    <!-- Floating Action Bar -->
     <div class="floating-action-bar" id="floatingBar">
         <span id="lblSelectedCount" style="font-size:14px; font-weight:bold;">已選 0 節</span>
         <button class="fab-btn fab-copy" onclick="handleCopy()">📋 複製</button>
@@ -128,6 +141,7 @@
         <button class="fab-btn fab-cancel" onclick="clearSelection()">取消</button>
     </div>
 
+    <!-- Bottom Navigation -->
     <div class="bottom-bar" id="bottomBar">
         <button class="btn" id="btnPrev" onclick="navigateChapter(-1)">上一章</button>
         <div class="chapter-indicator" id="lblBottomIndicator">創 1</div>
@@ -135,6 +149,7 @@
     </div>
 </div>
 
+<!-- 🎴 書卷選擇彈窗 -->
 <div class="modal" id="bookModal" onclick="closeModal(event, 'bookModal')">
     <div class="modal-content">
         <div class="modal-title">選擇書卷</div>
@@ -151,6 +166,7 @@
     </div>
 </div>
 
+<!-- 🎴 章數選擇彈窗 -->
 <div class="modal" id="chapterModal" onclick="closeModal(event, 'chapterModal')">
     <div class="modal-content">
         <div class="modal-title" id="chapterModalTitle">選擇章數</div>
@@ -160,6 +176,7 @@
     </div>
 </div>
 
+<!-- 🎴 外觀設定彈窗 -->
 <div class="modal" id="appearanceModal" onclick="closeModal(event, 'appearanceModal')">
     <div class="modal-content" style="max-width:360px;">
         <div class="modal-title">外觀設定</div>
@@ -199,6 +216,7 @@
     </div>
 </div>
 
+<!-- 🎴 56色板子彈窗 -->
 <div class="modal" id="colorPaletteModal" onclick="closeModal(event, 'colorPaletteModal')">
     <div class="modal-content" style="max-width:320px;">
         <div class="modal-title" id="colorModalTitle">請選擇顏色</div>
@@ -209,6 +227,7 @@
     </div>
 </div>
 
+<!-- 🎴 搜尋文字彈窗 -->
 <div class="modal" id="searchModal" onclick="closeModal(event, 'searchModal')">
     <div class="modal-content" style="max-width:90%; height:80%;">
         <div class="modal-title">文字檢索經文</div>
@@ -218,6 +237,22 @@
         </div>
         <div class="modal-body" id="searchResultsView" style="font-size:14px;"></div>
         <div class="modal-footer"><button class="btn" onclick="document.getElementById('searchModal').style.display='none'">關閉</button></div>
+    </div>
+</div>
+
+<!-- ✂️ 新增：相片手動縮放裁剪框專用彈窗 -->
+<div class="modal" id="cropModal" style="display:none; z-index: 2000;">
+    <div class="modal-content" style="max-width: 90%; width: 400px;">
+        <div class="modal-title">手動選取背景範圍</div>
+        <div class="modal-body">
+            <div class="crop-container">
+                <img id="cropImage" src="">
+            </div>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content: space-between;">
+            <button class="btn" onclick="cancelCrop()" style="background:#e0e0e0; color:#333;">取消</button>
+            <button class="btn" onclick="saveCroppedImage()" style="background:#4A148C; color:white;">確認選取</button>
+        </div>
     </div>
 </div>
 
