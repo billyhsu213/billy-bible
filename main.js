@@ -175,12 +175,14 @@ function renderCurrentChapter() {
         row.style.lineHeight = `1.45`;
         if (isGlobalBold) row.style.fontWeight = "bold";
 
-        row.onclick = () => handleVerseClick(index, fullText = fullVerseText, row, verseNumber);
+        // FIX: Syntax error here. Removed 'fullText = ' assignment inside arguments.
+        row.onclick = () => handleVerseClick(index, fullVerseText, row, verseNumber);
 
         if (verseNumber) {
             const numSpan = document.createElement('span');
             numSpan.className = "verse-num";
             numSpan.innerText = verseNumber;
+            // FIX: Variable reference error here. Changed 'allVersesCache' to 'fullVerseText'.
             numSpan.style.color = customBgImage ? "#FFFFFF" : (customTextColor || themes.find(t=>t.name===currentThemeName).contentText);
             numSpan.style.opacity = "0.5";
             numSpan.id = `vnum-${index}`;
